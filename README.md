@@ -1,178 +1,221 @@
-📚 BookStack – Fullstack Personal Library Manager
+# 📚 BookStack – Fullstack Personal Library Manager
 
-BookStack är en modern, fullstack-applikation för att organisera, söka och spåra din personliga boksamling. Projektet är byggt från grunden med fokus på ren kod, skalbar arkitektur och – viktigast av allt – en rigorös test- och kvalitetssäkringsprocess.
+BookStack är en modern fullstack-applikation för att organisera, söka och spåra din personliga boksamling. Projektet är byggt från grunden med fokus på ren kod, tydlig arkitektur och en automatiserad testsvit.
 
-Detta projekt fungerar som ett bevis på min förmåga att leverera robust, produktionsredo mjukvara där utveckling och QA (Quality Assurance) går hand i hand.
+Detta projekt fungerar som ett bevis på förmågan att leverera robust mjukvara där utveckling och QA (Quality Assurance) går hand i hand.
 
-🚀 Live Demo & Snabblänkar
+## 🚀 Live Demo & Snabblänkar
 
-Live App: [LÄGG_TILL_DIN_VERCEL_LÄNK_HÄR]
+| | |
+|---|---|
+| **Live App** | [LÄGG_TILL_DIN_VERCEL_LÄNK_HÄR](https://example.com) |
+| **Backend API** | [LÄGG_TILL_DIN_RENDER_LÄNK_HÄR](https://example.com) |
+| **QA Testrapport** | Se sektionen [Kvalitetssäkring & QA](#-kvalitetssäkring--qa) längre ner |
+| **Repository** | [github.com/Dinolisk/BookStack](https://github.com/Dinolisk/BookStack) |
 
-Backend API: [LÄGG_TILL_DIN_RENDER_LÄNK_HÄR]
+> **💡 Recruiter Hint:** Du behöver inte registrera ett konto. Klicka på **"Prova demo (demo@bookstack.com)"** på inloggningssidan för att logga in direkt och testa hela bokhyllan.
 
-QA Testrapport: Se sektionen Kvalitetssäkring & QA längre ner.
+---
 
-💡 Recruiter Hint: Du behöver inte registrera ett konto för att testa appen. Klicka på den gröna "Prova demo (1-klick)"-knappen på inloggningssidan för att direkt logga in på en fullt förifylld bokhylla i säkert demoläge!
+## ✨ Huvudfunktioner (MVP)
 
-✨ Huvudfunktioner (MVP)
+### 1. 🔑 Autentisering & Demo-läge
 
-1. 🔑 Säker Autentisering & Demo-läge
+- **JWT-baserad auth** – Tokens sparas i `localStorage` med automatisk sessionåterställning vid omladdning (`GET /api/auth/me`).
+- **1-klicks demo-inloggning** – Rekryterare kan testa appen direkt utan registrering.
+- **Användarscopad data** – Varje bok tillhör inloggad användare (`user_id`) och filtreras i backend.
 
-JWT-baserad Auth: Säker autentisering med JSON Web Tokens sparat i klientsidans localStorage med automatisk sessionåterställning vid omladdning.
+### 2. 📖 Bokhantering (CRUD)
 
-1-Klicks Gästinloggning: En sömlös demo-funktion som låter rekryterare uppleva appen direkt med autentisk förifylld data.
+- **Status-sortering** – Organisera böcker i *Vill läsa*, *Läser* och *Har läst klart*.
+- **Client-side filtrering** – Flikar (inkl. *Alla*) filtrerar och räknar böcker i realtid utan extra API-anrop, via TanStack Query-cache.
+- **Lägg till via sök eller manuellt** – Google Books-sökning fyller i titel, författare och omslag automatiskt; manuellt läge finns om boken inte hittas.
+- **Redigera & ta bort** – Inline-redigering i kortet och bekräftelse innan permanent radering.
 
-Skrivskyddat Demoläge (QA-tänk): Demokontot har spärrar i backenden som blockerar permanent radering av data (403 Forbidden), vilket skyddar demo-miljön från sabotage.
+### 3. 🔍 Google Books API (säker proxy)
 
-2. 📖 Bokhantering & Smarta Bokhyllor (CRUD)
+- **Realtidssökning** – Sök böcker med debounce och välj träff i listan.
+- **Säker proxy-arkitektur** – API-nyckeln exponeras aldrig i frontend. React anropar Express, som i sin tur anropar Google Books API och returnerar ett normaliserat JSON-format.
 
-Status-sortering: Organisera dina böcker i tre kategorier: Vill läsa, Läser just nu och Har läst klart.
+### 🔜 Planerat (ej implementerat ännu)
 
-Client-side filtrering: Snabba flikar som filtrerar och räknar böckerna i realtid utan extra API-anrop, tack vare effektiv cache-hantering med TanStack Query.
+- Betyg (1–5 stjärnor) och recensioner
+- Full registrering/inloggning via Supabase Auth
+- Playwright E2E-tester
 
-Betyg & Recensioner: Möjlighet att betygsätta (1–5 stjärnor) och skriva omdömen för färdiglästa böcker.
+---
 
-3. 🔍 Google Books API Integration (Säker Proxy)
+## 🛠️ Teknikstack
 
-Automatisk ifyllnad: Sök efter böcker i realtid och hämta automatiskt titel, författare och omslagsbilder.
+### Frontend
 
-Säker Proxy-arkitektur: API-nyckeln är 100 % dold från klientsidan. Frontenden pratar med Express-backenden, som säkert sköter sökningen mot Google Books API och formaterar datan innan den skickas tillbaka.
+| Teknik | Användning |
+|---|---|
+| **React (Vite)** | SPA med ES Modules |
+| **Tailwind CSS** | Responsiv UI; bokomslag i `aspect-[2/3]` med `object-cover` |
+| **TanStack Query** | Server-state, caching och cache-invalidering vid mutationer |
+| **React Context** | Global auth-session |
 
-🛠️ Teknikstack
+### Backend
 
-Frontend
+| Teknik | Användning |
+|---|---|
+| **Node.js & Express** | REST API med strukturerade rutter och middleware |
+| **PostgreSQL (Supabase)** | Relationsdatabas via session pooler |
+| **JWT (`jsonwebtoken`)** | Token-generering och verifiering |
+| **Vitest & Supertest** | Integrationstester mot API |
 
-React (Vite) – Snabbt, modernt SPA-ramverk med ES Modules.
+---
 
-Tailwind CSS – Utility-first CSS för responsiv design (pixel-perfekt utan svarta kanter på bokomslag via aspect-[2/3] och object-cover).
+## 🧪 Kvalitetssäkring & QA
 
-TanStack Query (React Query) – Deklarativ server-state hantering, caching och automatisk cache-invalidering vid CRUD-mutationer.
+BookStack har **47 automatiserade tester** som täcker API-kontrakt, auth, sökning och kritisk UI-logik.
 
-React Context API – Global tillståndshantering för användar- och auth-sessioner.
+### Backend – 26 tester (Vitest & Supertest)
 
-Backend
+Testerna kör mot Express-appen med mockad databas (`vi.mock`).
 
-Node.js & Express – Modulär serverarkitektur med strukturerade rutter och middlewares.
+**Täckning:**
 
-PostgreSQL & Supabase – Kraftfull relationsdatabas kopplad via en optimerad anslutningspool (Session Pooler) för stabil lokal och molnbaserad drift.
+- Hälsokontroll (`GET /`) och 404 för okända rutter
+- CRUD för böcker med validering (tom titel/författare → `400`)
+- JWT-skyddade rutter (kräver giltig `Bearer`-token)
+- Google Books-sökning (`GET /api/books/search`)
+- Demo-auth (`POST /api/auth/demo`, `GET /api/auth/me`)
+- Simulerade databasfel → `500` utan serverkrasch
 
-JWT (jsonwebtoken) – Generering och verifiering av säkra access-tokens.
+### Frontend – 21 tester (Vitest & React Testing Library)
 
-🧪 Kvalitetssäkring & QA (Mitt hemliga vapen)
+**Täckning:**
 
-Som en utvecklare med bakgrund inom QA (Software Testing) anser jag att kod som inte är testad inte är redo för produktion. BookStack har en omfattande, automatiserad testsvit på totalt 39 tester som täcker kritiska flöden, edge-cases och felhantering.
+- **BookForm** – Validering, sök-/manuellt läge, laddningstillstånd
+- **BookCard** – Inline-redigering, raderingsbekräftelse
+- **BookSearch** – Sökresultat och val av bok
+- **BookList** – Flikfiltrering och tomma tillstånd
+- **LoginPage** – Demo-inloggning
+- **bookStatus** – Statusräkning och filtrering
 
-1. Backend Integrationstester (21 st – Vitest & Supertest)
+```bash
+cd backend && npm test   # 26 tester
+cd frontend && npm test  # 21 tester
+```
 
-Hela API-kontraktet är kvalitetssäkrat. Testerna körs mot Express-appen med en helt isolerad och mockad databasanslutning (vi.mock).
+---
 
-Täckning:
+## 📐 Arkitektur & Säkerhetsbeslut
 
-Hälso-check (GET /) och okända rutter (404-hantering).
+### 🔒 API-nycklar (proxy-mönster)
 
-Strikt validering (t.ex. att POST och PUT stoppar tomma titlar/författare med 400 Bad Request).
+Google Books API-nyckeln lagras endast i backend `.env`:
 
-Autentisering och behörighetskontroller (skyddade rutter kräver giltig Bearer-token).
+```
+[Frontend React] ── sökfråga ──> [Express API] ── hemlig nyckel ──> [Google Books API]
+[Frontend React] <── ren JSON ── [Express API] <── rå JSON ──────── [Google Books API]
+```
 
-Robusta felhanteringstester (simulerade databas-fel returnerar 500 Internal Server Error istället för att krascha servern).
+Detta skyddar nyckeln, centraliserar felhantering och låter backend normalisera svaret innan det når klienten.
 
-2. Frontend Enhet- & Komponenttester (18 st – Vitest & React Testing Library)
+### 🛡️ Felhantering i UI
 
-Täckning:
+- Formulärvalidering stoppar tomma fält innan API-anrop
+- Bekräftelsedialog innan permanent radering
+- Tydliga felmeddelanden från API visas via `role="alert"`
+- Mutationer sätter knappar i disabled/laddningstillstånd under pågående request
 
-BookForm: Verifierar frontend-validering (stoppar tomma fält innan API-anrop görs), laddningslägen (isPending sätter knappen till disabled) och rendering av felmeddelanden.
+---
 
-BookCard: Testar inline-redigering, bekräftelse-modaler vid radering och defensiv programmering (guard clauses om datan tillfälligt är undefined).
+## 💾 Databas-schema (PostgreSQL)
 
-StatusTabs: Testar interaktion, flikbyten och korrekt rendering av tomma tillstånd ("Inga böcker med denna status").
+Kör `backend/schema.sql` i Supabase SQL Editor. Valfritt demo-innehåll: `backend/sql/seed-demo-books.sql`.
 
-📐 Arkitektur & Säkerhetsbeslut
-
-🔒 Dölja API-nycklar (Proxy-mönstret)
-
-Att exponera en Google-nyckel i källkoden i React är en stor säkerhetsrisk. Jag designade därför en API Proxy i min backend:
-
-[Frontend (React)] ──(Sökfråga)──> [Backend (Express)] ──(Hemlig Nyckel)──> [Google Books API]
-[Frontend (React)] <──(Ren JSON)── [Backend (Express)] <──(Tung JSON)─────── [Google Books API]
-
-
-Detta skyddar nyckeln, begränsar användningen och gör att jag kan transformera Googles tunga JSON-respons till ett mycket lättare och renare format innan det når användarens webbläsare.
-
-🛡️ Defensiv React-programmering
-
-För att undvika att appen kraschar vid asynkrona laddningstider eller trasig data, har BookCard utrustats med en kraschsäker guard clause:
-
-if (!book) return null; // Förhindrar krascher om datan är tillfälligt tom
-
-
-All rendering och status-initiering använder dessutom optional chaining (book?.title) och logiska fallbacks (book?.author || 'Okänd författare').
-
-💾 Databas-schema (PostgreSQL)
-
+```sql
 CREATE TABLE books (
   id SERIAL PRIMARY KEY,
   title TEXT NOT NULL,
   author TEXT NOT NULL,
-  status TEXT DEFAULT 'Vill läsa',
-  cover_image_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL
+  status TEXT NOT NULL DEFAULT 'Vill läsa',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  user_id UUID,
+  cover_image_url TEXT
 );
+```
 
+> Foreign key mot `auth.users` kan aktiveras när full Supabase Auth införs (se kommentar i `schema.sql`).
 
-💻 Kom igång lokalt
+---
 
-Förutsättningar
+## 💻 Kom igång lokalt
 
-Node.js (v18 eller senare)
+### Förutsättningar
 
-Ett gratis Supabase-konto (eller lokal Postgres)
+- Node.js v18+
+- Supabase-konto (eller lokal PostgreSQL)
+- Google Books API-nyckel ([Google Cloud Console](https://console.cloud.google.com))
 
-1. Klona och installera
+### 1. Klona och installera
 
-git clone https://github.com/DITT_ANVÄNDARNAMN/bookstack.git
-cd bookstack
+```bash
+git clone https://github.com/Dinolisk/BookStack.git
+cd BookStack
+```
 
+### 2. Databas
 
-2. Konfigurera Backend
+Kör i Supabase SQL Editor:
 
-Skapa en .env-fil i /backend:
+1. `backend/schema.sql`
+2. (Valfritt) `backend/sql/seed-demo-books.sql` – ersätt `:demo_user_id` med ditt `DEMO_USER_ID`
 
+### 3. Backend
+
+Kopiera `backend/.env.example` till `backend/.env` och fyll i:
+
+```env
 PORT=5001
 DATABASE_URL=din_supabase_session_pooler_url
 JWT_SECRET=din_hemliga_jwt_signeringstext
 DEMO_USER_ID=11111111-1111-1111-1111-111111111111
 DEMO_USER_EMAIL=demo@bookstack.com
 GOOGLE_BOOKS_API_KEY=din_google_books_api_nyckel
+```
 
-
-Starta backenden:
-
+```bash
 cd backend
 npm install
 npm run dev
+```
 
+API: **http://localhost:5001**
 
-3. Konfigurera Frontend
+### 4. Frontend
 
-Starta frontenden:
-
-cd ../frontend
-npm install
-npm run dev
-
-
-Öppna sedan http://localhost:5173 i din webbläsare!
-
-4. Kör testerna 🧪
-
-För att verifiera kvaliteten och köra testsviterna:
-
-# Backend-tester
-cd backend
-npm test
-
-# Frontend-tester
+```bash
 cd frontend
-npm test
+npm install
+npm run dev
+```
 
+App: **http://localhost:5173** (Vite proxar `/api` → backend)
+
+### 5. Kör testerna
+
+```bash
+cd backend && npm test
+cd frontend && npm test
+```
+
+---
+
+## 📁 Projektstruktur
+
+```
+BookStack/
+├── backend/           # Express API, PostgreSQL, JWT, tester
+├── frontend/          # React + Vite + Tailwind
+├── bookstack_blueprint.md
+└── README.md
+```
+
+## Licens
+
+Privat / portfolioprojekt.
