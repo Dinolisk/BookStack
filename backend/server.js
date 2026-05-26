@@ -7,11 +7,9 @@ import bookRoutes from "./routes/bookRoutes.js";
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-const allowedOrigins = process.env.ALLOWED_ORIGIN
-  ? [process.env.ALLOWED_ORIGIN]
-  : ["http://localhost:5173"];
-
-app.use(cors({ origin: allowedOrigins }));
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGIN || "*",
+}));
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
