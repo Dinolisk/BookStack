@@ -2,7 +2,58 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { STATUS_OPTIONS } from "../constants/bookStatus";
 import { createBook } from "../services/api";
+import { useCoverImage } from "../hooks/useCoverImage";
 import BookSearch from "./BookSearch";
+
+function SelectedBookPreview({ book, onBack }) {
+  const cover = useCoverImage(book.coverImageUrl, book.isbn);
+  return (
+    <div className="rounded-lg border border-sky-500/30 bg-slate-950 p-4">
+      <div className="flex gap-4">
+        {cover.src ? (
+          <img
+            src={cover.src}
+            onLoad={cover.handleLoad}
+            onError={cover.handleError}
+            alt={`Omslag för ${book.title}`}
+            className="aspect-[2/3] w-20 shrink-0 rounded bg-slate-800 object-contain shadow-md"
+          />
+        ) : (
+          <div className="flex aspect-[2/3] w-20 shrink-0 flex-col items-center justify-center gap-1 rounded bg-slate-800 px-1">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-7 w-7 text-slate-500"
+              aria-hidden="true"
+            >
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+            <span className="line-clamp-2 text-center text-xs text-slate-500">
+              Inget omslag
+            </span>
+          </div>
+        )}
+        <div>
+          <p className="text-lg font-semibold text-white">{book.title}</p>
+          <p className="text-slate-400">{book.author}</p>
+          <button
+            type="button"
+            onClick={onBack}
+            className="mt-3 text-sm text-sky-400 hover:text-sky-300"
+          >
+            Välj en annan bok
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function BookForm() {
   const queryClient = useQueryClient();
@@ -78,6 +129,7 @@ export default function BookForm() {
       author: trimmedAuthor,
       status,
       cover_image_url: selectedBook?.coverImageUrl || undefined,
+      isbn: selectedBook?.isbn || undefined,
     });
   }
 
@@ -114,34 +166,7 @@ export default function BookForm() {
         )}
 
         {mode === "selected" && selectedBook && (
-          <div className="rounded-lg border border-sky-500/30 bg-slate-950 p-4">
-            <div className="flex gap-4">
-              {selectedBook.coverImageUrl ? (
-                <img
-                  src={selectedBook.coverImageUrl}
-                  alt={`Omslag för ${selectedBook.title}`}
-                  className="aspect-[2/3] w-20 shrink-0 rounded bg-slate-800 object-contain shadow-md"
-                />
-              ) : (
-                <div className="aspect-[2/3] w-20 shrink-0 rounded bg-slate-800 text-xs text-slate-500 flex items-center justify-center text-center px-1">
-                  Inget omslag
-                </div>
-              )}
-              <div>
-                <p className="text-lg font-semibold text-white">
-                  {selectedBook.title}
-                </p>
-                <p className="text-slate-400">{selectedBook.author}</p>
-                <button
-                  type="button"
-                  onClick={backToSearch}
-                  className="mt-3 text-sm text-sky-400 hover:text-sky-300"
-                >
-                  Välj en annan bok
-                </button>
-              </div>
-            </div>
-          </div>
+          <SelectedBookPreview book={selectedBook} onBack={backToSearch} />
         )}
 
         {mode === "manual" && (

@@ -1,15 +1,23 @@
+import { pickCoverUrlFromImageLinks } from "../utils/coverImage.js";
+
 const GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1/volumes";
+
+function extractIsbn(identifiers) {
+  if (!identifiers?.length) return null;
+  const isbn13 = identifiers.find((i) => i.type === "ISBN_13");
+  const isbn10 = identifiers.find((i) => i.type === "ISBN_10");
+  return (isbn13 ?? isbn10)?.identifier ?? null;
+}
 
 function normalizeVolume(item) {
   const volumeInfo = item.volumeInfo ?? {};
-  const rawCover =
-    volumeInfo.imageLinks?.thumbnail || volumeInfo.imageLinks?.smallThumbnail;
 
   return {
     id: item.id,
     title: volumeInfo.title || "Okänd titel",
     author: volumeInfo.authors?.join(", ") || "Okänd författare",
-    coverImageUrl: rawCover ? rawCover.replace(/^http:/, "https:") : null,
+    coverImageUrl: pickCoverUrlFromImageLinks(volumeInfo.imageLinks),
+    isbn: extractIsbn(volumeInfo.industryIdentifiers),
   };
 }
 

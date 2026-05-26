@@ -3,6 +3,7 @@ import pool from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { searchGoogleBooks } from "../services/googleBooks.js";
 import { parseRating, parseReview } from "../utils/bookFields.js";
+import { withNormalizedCover, resolveBestCoverUrl } from "../utils/coverImage.js";
 
 const router = express.Router();
 
@@ -46,7 +47,7 @@ router.get("/", async (req, res) => {
       "SELECT * FROM books WHERE user_id = $1 ORDER BY created_at DESC",
       [req.user.id]
     );
-    res.json(result.rows);
+    res.json(result.rows.map(withNormalizedCover));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -57,6 +58,7 @@ router.post("/", async (req, res) => {
   const author = req.body.author?.trim();
   const status = req.body.status?.trim() || "Vill läsa";
   const coverImageUrl = req.body.cover_image_url?.trim() || null;
+  const isbn = req.body.isbn?.trim() || null;
 
   if (!title || !author) {
     return res.status(400).json({ error: "Titel och författare krävs." });
@@ -66,10 +68,12 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ error: "Ogiltig omslags-URL." });
   }
 
+  const resolvedCoverUrl = await resolveBestCoverUrl(coverImageUrl, isbn);
+
   try {
     const result = await pool.query(
-      "INSERT INTO books (title, author, status, user_id, cover_image_url) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [title, author, status, req.user.id, coverImageUrl]
+      "INSERT INTO books (title, author, status, user_id, cover_image_url, isbn) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+      [title, author, status, req.user.id, resolvedCoverUrl, isbn]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -105,14 +109,19 @@ router.put("/:id", async (req, res) => {
     updates.push(`author = $${values.length}`);
   }
 
-  if (req.body.status !== undefined) {
-    const status = req.body.status?.trim();
-    if (!status) {
+  const newStatus = req.body.status !== undefined ? req.body.status?.trim() : undefined;
+
+  if (newStatus !== undefined) {
+    if (!newStatus) {
       return res.status(400).json({ error: "Status får inte vara tom." });
     }
-    values.push(status);
+    values.push(newStatus);
     updates.push(`status = $${values.length}`);
   }
+
+  // Rating and review are only valid for finished books.
+  // If the status is being changed away from "Har läst klart", force-clear both.
+  const clearReadingData = newStatus !== undefined && newStatus !== "Har läst klart";
 
   if (req.body.cover_image_url !== undefined) {
     const coverImageUrl = req.body.cover_image_url?.trim() || null;
@@ -123,22 +132,29 @@ router.put("/:id", async (req, res) => {
     updates.push(`cover_image_url = $${values.length}`);
   }
 
-  if (req.body.rating !== undefined) {
-    const parsedRating = parseRating(req.body.rating);
-    if (parsedRating.error) {
-      return res.status(400).json({ error: parsedRating.error });
-    }
-    values.push(parsedRating.value);
+  if (clearReadingData) {
+    values.push(null);
     updates.push(`rating = $${values.length}`);
-  }
-
-  if (req.body.review !== undefined) {
-    const parsedReview = parseReview(req.body.review);
-    if (parsedReview.error) {
-      return res.status(400).json({ error: parsedReview.error });
-    }
-    values.push(parsedReview.value);
+    values.push(null);
     updates.push(`review = $${values.length}`);
+  } else {
+    if (req.body.rating !== undefined) {
+      const parsedRating = parseRating(req.body.rating);
+      if (parsedRating.error) {
+        return res.status(400).json({ error: parsedRating.error });
+      }
+      values.push(parsedRating.value);
+      updates.push(`rating = $${values.length}`);
+    }
+
+    if (req.body.review !== undefined) {
+      const parsedReview = parseReview(req.body.review);
+      if (parsedReview.error) {
+        return res.status(400).json({ error: parsedReview.error });
+      }
+      values.push(parsedReview.value);
+      updates.push(`review = $${values.length}`);
+    }
   }
 
   if (updates.length === 0) {

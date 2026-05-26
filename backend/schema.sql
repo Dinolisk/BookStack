@@ -1,3 +1,15 @@
+-- BookStack: users table
+-- RLS is enabled with no policies: Supabase REST API returns nothing,
+-- but our direct pg connection (backend) is unaffected.
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
 -- BookStack: books table (Supabase / PostgreSQL)
 -- Run in Supabase SQL Editor. Safe to re-run migration block if table already exists.
 
@@ -18,6 +30,8 @@ ALTER TABLE books ADD COLUMN IF NOT EXISTS user_id UUID;
 ALTER TABLE books ADD COLUMN IF NOT EXISTS cover_image_url TEXT;
 ALTER TABLE books ADD COLUMN IF NOT EXISTS rating SMALLINT;
 ALTER TABLE books ADD COLUMN IF NOT EXISTS review TEXT;
+
+ALTER TABLE books ADD COLUMN IF NOT EXISTS isbn TEXT;
 
 ALTER TABLE books DROP CONSTRAINT IF EXISTS books_rating_check;
 ALTER TABLE books ADD CONSTRAINT books_rating_check

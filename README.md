@@ -8,7 +8,7 @@ Detta projekt fungerar som ett bevis på förmågan att leverera robust mjukvara
 
 | | |
 |---|---|
-| **Live App** | [LÄGG_TILL_DIN_VERCEL_LÄNK_HÄR](https://example.com) |
+| **Live App** | [LÄGG_TILL_DIN_NETLIFY_LÄNK_HÄR](https://example.com) |
 | **Backend API** | [LÄGG_TILL_DIN_RENDER_LÄNK_HÄR](https://example.com) |
 | **QA Testrapport** | Se sektionen [Kvalitetssäkring & QA](#-kvalitetssäkring--qa) längre ner |
 | **Repository** | [github.com/Dinolisk/BookStack](https://github.com/Dinolisk/BookStack) |
@@ -21,7 +21,8 @@ Detta projekt fungerar som ett bevis på förmågan att leverera robust mjukvara
 
 ### 1. 🔑 Autentisering & Demo-läge
 
-- **JWT-baserad auth** – Tokens sparas i `localStorage` med automatisk sessionåterställning vid omladdning (`GET /api/auth/me`).
+- **Registrering & inloggning** – Eget auth-system med bcrypt-hashade lösenord och JWT-tokens.
+- **JWT-baserad session** – Tokens sparas i `localStorage` med automatisk sessionåterställning vid omladdning (`GET /api/auth/me`).
 - **1-klicks demo-inloggning** – Rekryterare kan testa appen direkt utan registrering.
 - **Användarscopad data** – Varje bok tillhör inloggad användare (`user_id`) och filtreras i backend.
 
@@ -32,15 +33,20 @@ Detta projekt fungerar som ett bevis på förmågan att leverera robust mjukvara
 - **Lägg till via sök eller manuellt** – Google Books-sökning fyller i titel, författare och omslag automatiskt; manuellt läge finns om boken inte hittas.
 - **Redigera & ta bort** – Inline-redigering i kortet och bekräftelse innan permanent radering.
 
-### 3. 🔍 Google Books API (säker proxy)
+### 3. ⭐ Betyg & Recensioner
+
+- **1–5 stjärnor** – Interaktiv stjärnkomponent med visuell feedback.
+- **Fritext-recension** – Valfritt omdöme som visas på kortet och i detaljvyn.
+- **Domänlogik** – Betyg och recension är enbart tillgängliga för böcker med status *Har läst klart*, både i UI och backend.
+
+### 4. 🔍 Google Books API (säker proxy)
 
 - **Realtidssökning** – Sök böcker med debounce och välj träff i listan.
+- **Smart omslagslösning** – Backend försöker först hämta högupplöst omslag från Open Library via ISBN; faller tillbaka på Google Books-omslaget om inget hittas.
 - **Säker proxy-arkitektur** – API-nyckeln exponeras aldrig i frontend. React anropar Express, som i sin tur anropar Google Books API och returnerar ett normaliserat JSON-format.
 
 ### 🔜 Planerat (ej implementerat ännu)
 
-- Betyg (1–5 stjärnor) och recensioner
-- Full registrering/inloggning via Supabase Auth
 - Playwright E2E-tester
 
 ---
@@ -52,7 +58,7 @@ Detta projekt fungerar som ett bevis på förmågan att leverera robust mjukvara
 | Teknik | Användning |
 |---|---|
 | **React (Vite)** | SPA med ES Modules |
-| **Tailwind CSS** | Responsiv UI; bokomslag i `aspect-[2/3]` med `object-cover` |
+| **Tailwind CSS** | Responsiv UI; bokomslag i `aspect-[2/3]` med `object-contain` |
 | **TanStack Query** | Server-state, caching och cache-invalidering vid mutationer |
 | **React Context** | Global auth-session |
 
@@ -69,9 +75,9 @@ Detta projekt fungerar som ett bevis på förmågan att leverera robust mjukvara
 
 ## 🧪 Kvalitetssäkring & QA
 
-BookStack har **47 automatiserade tester** som täcker API-kontrakt, auth, sökning och kritisk UI-logik.
+BookStack har **88 automatiserade tester** som täcker API-kontrakt, auth, sökning och kritisk UI-logik.
 
-### Backend – 26 tester (Vitest & Supertest)
+### Backend – 54 tester (Vitest & Supertest)
 
 Testerna kör mot Express-appen med mockad databas (`vi.mock`).
 
@@ -80,24 +86,28 @@ Testerna kör mot Express-appen med mockad databas (`vi.mock`).
 - Hälsokontroll (`GET /`) och 404 för okända rutter
 - CRUD för böcker med validering (tom titel/författare → `400`)
 - JWT-skyddade rutter (kräver giltig `Bearer`-token)
-- Google Books-sökning (`GET /api/books/search`)
+- Registrering (`POST /api/auth/register`) – dubblettmail, ogiltigt email, för kort lösenord
+- Inloggning (`POST /api/auth/login`) – fel lösenord, okänd användare
 - Demo-auth (`POST /api/auth/demo`, `GET /api/auth/me`)
+- Google Books-sökning (`GET /api/books/search`)
+- Betyg/recension rensas i databasen när status ändras från *Har läst klart*
+- Open Library cover-fallback (riktigt omslag vs platshållare vs nätverksfel)
 - Simulerade databasfel → `500` utan serverkrasch
 
-### Frontend – 21 tester (Vitest & React Testing Library)
+### Frontend – 34 tester (Vitest & React Testing Library)
 
 **Täckning:**
 
 - **BookForm** – Validering, sök-/manuellt läge, laddningstillstånd
-- **BookCard** – Inline-redigering, raderingsbekräftelse
+- **BookCard** – Inline-redigering, raderingsbekräftelse, betyg/recension synlighet baserat på status, statusbyte rensar fält
 - **BookSearch** – Sökresultat och val av bok
 - **BookList** – Flikfiltrering och tomma tillstånd
-- **LoginPage** – Demo-inloggning
+- **LoginPage** – Demo-inloggning, login-flödet, registrering, lösenordsmismatch
 - **bookStatus** – Statusräkning och filtrering
 
 ```bash
-cd backend && npm test   # 26 tester
-cd frontend && npm test  # 21 tester
+cd backend && npm test   # 54 tester
+cd frontend && npm test  # 34 tester
 ```
 
 ---
@@ -136,11 +146,12 @@ CREATE TABLE books (
   status TEXT NOT NULL DEFAULT 'Vill läsa',
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   user_id UUID,
-  cover_image_url TEXT
+  cover_image_url TEXT,
+  isbn TEXT,
+  rating SMALLINT CHECK (rating BETWEEN 1 AND 5),
+  review TEXT
 );
 ```
-
-> Foreign key mot `auth.users` kan aktiveras när full Supabase Auth införs (se kommentar i `schema.sql`).
 
 ---
 

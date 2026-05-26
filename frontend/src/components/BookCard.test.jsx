@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import BookCard from "./BookCard";
@@ -111,7 +111,7 @@ describe("BookCard", () => {
     });
   });
 
-  it("displays rating and review on the card", () => {
+  it("displays rating on the card", () => {
     renderBookCard({
       ...sampleBook,
       status: "Har läst klart",
@@ -120,7 +120,40 @@ describe("BookCard", () => {
     });
 
     expect(screen.getByLabelText(/5 av 5 stjärnor/i)).toBeInTheDocument();
-    expect(screen.getByText("Bästa boken någonsin")).toBeInTheDocument();
+  });
+
+  it("opens modal when Detaljer is clicked", async () => {
+    const user = userEvent.setup();
+    renderBookCard({
+      ...sampleBook,
+      status: "Har läst klart",
+      rating: 5,
+      review: "Bästa boken någonsin",
+    });
+
+    await user.click(screen.getByRole("button", { name: /^detaljer$/i }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByText("Bästa boken någonsin")).toBeInTheDocument();
+  });
+
+  it("closes modal when Stäng is clicked", async () => {
+    const user = userEvent.setup();
+    renderBookCard({
+      ...sampleBook,
+      review: "En fin bok",
+    });
+
+    await user.click(screen.getByRole("button", { name: /^detaljer$/i }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    const closeButtons = within(screen.getByRole("dialog")).getAllByRole(
+      "button",
+      { name: /stäng/i }
+    );
+    await user.click(closeButtons[0]);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("requires confirmation before delete", async () => {
@@ -130,6 +163,53 @@ describe("BookCard", () => {
     await user.click(screen.getByRole("button", { name: /^ta bort$/i }));
     expect(screen.getByText(/ta bort den här boken permanent/i)).toBeInTheDocument();
     expect(deleteBook).not.toHaveBeenCalled();
+  });
+
+  it("hides rating and review fields when status is not Har läst klart", async () => {
+    const user = userEvent.setup();
+    renderBookCard();
+
+    await user.click(screen.getByRole("button", { name: /redigera/i }));
+
+    expect(screen.queryByPlaceholderText(/skriv ett kort omdöme/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/stjärn/i)).not.toBeInTheDocument();
+  });
+
+  it("shows rating and review fields when status is Har läst klart", async () => {
+    const user = userEvent.setup();
+    renderBookCard({ ...sampleBook, status: "Har läst klart" });
+
+    await user.click(screen.getByRole("button", { name: /redigera/i }));
+
+    expect(screen.getByPlaceholderText(/skriv ett kort omdöme/i)).toBeInTheDocument();
+  });
+
+  it("hides rating and review fields when status is changed away from Har läst klart", async () => {
+    const user = userEvent.setup();
+    renderBookCard({ ...sampleBook, status: "Har läst klart" });
+
+    await user.click(screen.getByRole("button", { name: /redigera/i }));
+    expect(screen.getByPlaceholderText(/skriv ett kort omdöme/i)).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByRole("combobox"), "Läser");
+    expect(screen.queryByPlaceholderText(/skriv ett kort omdöme/i)).not.toBeInTheDocument();
+  });
+
+  it("sends null rating and review when status changes away from Har läst klart", async () => {
+    const user = userEvent.setup();
+    updateBook.mockResolvedValueOnce({ ...sampleBook, status: "Läser", rating: null, review: null });
+
+    renderBookCard({ ...sampleBook, status: "Har läst klart", rating: 4, review: "Bra bok" });
+
+    await user.click(screen.getByRole("button", { name: /redigera/i }));
+    await user.selectOptions(screen.getByRole("combobox"), "Läser");
+    await user.click(screen.getByRole("button", { name: /^spara$/i }));
+
+    expect(updateBook).toHaveBeenCalledWith(1, expect.objectContaining({
+      status: "Läser",
+      rating: null,
+      review: null,
+    }));
   });
 
   it("calls deleteBook after confirmation", async () => {

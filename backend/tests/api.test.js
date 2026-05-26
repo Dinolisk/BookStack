@@ -238,6 +238,22 @@ describe("BookStack API", () => {
       expect(mockQuery).not.toHaveBeenCalled();
     });
 
+    it("clears rating and review in the database when status changes to non-read", async () => {
+      const updated = { ...sampleBook, status: "Läser", rating: null, review: null };
+      mockQuery.mockResolvedValueOnce({ rows: [updated] });
+
+      await request(app)
+        .put("/api/books/1")
+        .set(createAuthHeader())
+        .send({ status: "Läser", rating: 4, review: "Ska rensas" });
+
+      const [sql, values] = mockQuery.mock.calls[0];
+      expect(sql).toContain("rating = $");
+      expect(sql).toContain("review = $");
+      const nullCount = values.filter((v) => v === null).length;
+      expect(nullCount).toBe(2);
+    });
+
     it("returns 200 when clearing rating", async () => {
       const updated = { ...sampleBook, rating: null, review: null };
       mockQuery.mockResolvedValueOnce({ rows: [updated] });

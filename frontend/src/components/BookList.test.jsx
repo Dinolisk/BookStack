@@ -48,21 +48,22 @@ describe("BookList status tabs", () => {
   it("shows all books on the Alla tab", async () => {
     renderBookList();
 
-    expect(await screen.findByText("Book A")).toBeInTheDocument();
-    expect(screen.getByText("Book B")).toBeInTheDocument();
-    expect(screen.getByText("Book C")).toBeInTheDocument();
+    // Use role-based query to target the heading, not the cover placeholder span
+    expect(await screen.findByRole("heading", { name: "Book A" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Book B" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Book C" })).toBeInTheDocument();
   });
 
   it("filters books when a status tab is selected", async () => {
     const user = userEvent.setup();
     renderBookList();
 
-    await screen.findByText("Book A");
+    await screen.findByRole("heading", { name: "Book A" });
     await user.click(screen.getByRole("tab", { name: /läser/i }));
 
-    expect(screen.getByText("Book B")).toBeInTheDocument();
-    expect(screen.queryByText("Book A")).not.toBeInTheDocument();
-    expect(screen.queryByText("Book C")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Book B" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Book A" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Book C" })).not.toBeInTheDocument();
   });
 
   it("shows an empty-state message for tabs without books", async () => {
@@ -73,7 +74,7 @@ describe("BookList status tabs", () => {
     const user = userEvent.setup();
     renderBookList();
 
-    await screen.findByText("Book A");
+    await screen.findByRole("heading", { name: "Book A" });
     await user.click(screen.getByRole("tab", { name: /läser/i }));
 
     expect(

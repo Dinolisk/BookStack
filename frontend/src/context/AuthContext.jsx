@@ -3,6 +3,8 @@ import {
   demoLogin,
   getCurrentUser,
   loadAuthToken,
+  login as apiLogin,
+  register as apiRegister,
   setAuthToken,
 } from "../services/api";
 
@@ -36,6 +38,22 @@ export function AuthProvider({ children }) {
     restoreSession();
   }, []);
 
+  async function register(email, password) {
+    setError("");
+    const data = await apiRegister(email, password);
+    setAuthToken(data.token);
+    setUser(data.user);
+    return data.user;
+  }
+
+  async function login(email, password) {
+    setError("");
+    const data = await apiLogin(email, password);
+    setAuthToken(data.token);
+    setUser(data.user);
+    return data.user;
+  }
+
   async function loginAsDemo() {
     setError("");
     const data = await demoLogin();
@@ -56,6 +74,8 @@ export function AuthProvider({ children }) {
       isLoading,
       error,
       setError,
+      register,
+      login,
       loginAsDemo,
       logout,
       isAuthenticated: Boolean(user),
