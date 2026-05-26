@@ -63,6 +63,7 @@ export default function BookForm() {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [status, setStatus] = useState("Vill läsa");
+  const [coverUrl, setCoverUrl] = useState("");
   const [validationError, setValidationError] = useState("");
 
   const mutation = useMutation({
@@ -79,6 +80,7 @@ export default function BookForm() {
     setTitle("");
     setAuthor("");
     setStatus("Vill läsa");
+    setCoverUrl("");
     setValidationError("");
     setSearchResetKey((key) => key + 1);
   }
@@ -98,6 +100,7 @@ export default function BookForm() {
     setTitle("");
     setAuthor("");
     setStatus("Vill läsa");
+    setCoverUrl("");
     setValidationError("");
     setMode("manual");
     setSearchResetKey((key) => key + 1);
@@ -128,7 +131,7 @@ export default function BookForm() {
       title: trimmedTitle,
       author: trimmedAuthor,
       status,
-      cover_image_url: selectedBook?.coverImageUrl || undefined,
+      cover_image_url: selectedBook?.coverImageUrl || coverUrl.trim() || undefined,
       isbn: selectedBook?.isbn || undefined,
     });
   }
@@ -202,6 +205,19 @@ export default function BookForm() {
                 />
               </label>
             </div>
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-slate-300">
+                Omslags-URL <span className="text-slate-500">(valfritt)</span>
+              </span>
+              <input
+                type="url"
+                value={coverUrl}
+                onChange={(event) => setCoverUrl(event.target.value)}
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none ring-sky-500 focus:ring-2"
+                placeholder="https://..."
+                disabled={mutation.isPending}
+              />
+            </label>
             <button
               type="button"
               onClick={backToSearch}
