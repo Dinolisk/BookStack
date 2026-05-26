@@ -2,6 +2,7 @@ import express from "express";
 import pool from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { searchGoogleBooks } from "../services/googleBooks.js";
+import { parseRating, parseReview } from "../utils/bookFields.js";
 
 const router = express.Router();
 
@@ -120,6 +121,24 @@ router.put("/:id", async (req, res) => {
     }
     values.push(coverImageUrl);
     updates.push(`cover_image_url = $${values.length}`);
+  }
+
+  if (req.body.rating !== undefined) {
+    const parsedRating = parseRating(req.body.rating);
+    if (parsedRating.error) {
+      return res.status(400).json({ error: parsedRating.error });
+    }
+    values.push(parsedRating.value);
+    updates.push(`rating = $${values.length}`);
+  }
+
+  if (req.body.review !== undefined) {
+    const parsedReview = parseReview(req.body.review);
+    if (parsedReview.error) {
+      return res.status(400).json({ error: parsedReview.error });
+    }
+    values.push(parsedReview.value);
+    updates.push(`review = $${values.length}`);
   }
 
   if (updates.length === 0) {

@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { STATUS_OPTIONS, statusColor } from "../constants/bookStatus";
 import { deleteBook, updateBook } from "../services/api";
+import StarRating from "./StarRating";
 
 export default function BookCard({ book }) {
   const queryClient = useQueryClient();
@@ -10,6 +11,8 @@ export default function BookCard({ book }) {
   const [title, setTitle] = useState(book.title);
   const [author, setAuthor] = useState(book.author);
   const [status, setStatus] = useState(book.status);
+  const [rating, setRating] = useState(book.rating ?? null);
+  const [review, setReview] = useState(book.review ?? "");
   const [validationError, setValidationError] = useState("");
 
   const updateMutation = useMutation({
@@ -39,6 +42,8 @@ export default function BookCard({ book }) {
     setTitle(book.title);
     setAuthor(book.author);
     setStatus(book.status);
+    setRating(book.rating ?? null);
+    setReview(book.review ?? "");
     setValidationError("");
     setConfirmDelete(false);
     setIsEditing(true);
@@ -66,6 +71,8 @@ export default function BookCard({ book }) {
       title: trimmedTitle,
       author: trimmedAuthor,
       status,
+      rating,
+      review: review.trim() || null,
     });
   }
 
@@ -121,6 +128,41 @@ export default function BookCard({ book }) {
             </select>
           </label>
 
+          <div>
+            <span className="mb-1 block text-sm font-medium text-slate-300">
+              Betyg
+            </span>
+            <StarRating
+              value={rating}
+              onChange={setRating}
+              disabled={isPending}
+            />
+            {rating != null && (
+              <button
+                type="button"
+                onClick={() => setRating(null)}
+                disabled={isPending}
+                className="mt-1 text-xs text-slate-500 hover:text-slate-300"
+              >
+                Ta bort betyg
+              </button>
+            )}
+          </div>
+
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-300">
+              Recension
+            </span>
+            <textarea
+              value={review}
+              onChange={(event) => setReview(event.target.value)}
+              disabled={isPending}
+              rows={3}
+              placeholder="Skriv ett kort omdöme (valfritt)"
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none ring-sky-500 focus:ring-2"
+            />
+          </label>
+
           {errorMessage && (
             <div
               className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300"
@@ -170,6 +212,11 @@ export default function BookCard({ book }) {
         <div>
           <h2 className="text-lg font-semibold text-white">{book.title}</h2>
           <p className="text-slate-400">{book.author}</p>
+          {book.rating != null && (
+            <div className="mt-2">
+              <StarRating value={book.rating} readOnly />
+            </div>
+          )}
         </div>
         <span
           className={`rounded-full px-3 py-1 text-xs font-medium ${statusColor(book.status)}`}
@@ -177,6 +224,12 @@ export default function BookCard({ book }) {
           {book.status}
         </span>
       </div>
+
+      {book.review && (
+        <blockquote className="mb-4 border-l-2 border-slate-700 pl-3 text-sm italic text-slate-300">
+          {book.review}
+        </blockquote>
+      )}
 
       {book.created_at && (
         <p className="mb-4 text-xs text-slate-500">

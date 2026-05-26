@@ -77,7 +77,50 @@ describe("BookCard", () => {
       title: "Harry Potter",
       author: "J.K. Rowling",
       status: "Läser",
+      rating: null,
+      review: null,
     });
+  });
+
+  it("saves rating and review when editing", async () => {
+    const user = userEvent.setup();
+    updateBook.mockResolvedValueOnce({
+      ...sampleBook,
+      status: "Har läst klart",
+      rating: 4,
+      review: "Magisk!",
+    });
+
+    renderBookCard();
+
+    await user.click(screen.getByRole("button", { name: /redigera/i }));
+    await user.selectOptions(screen.getByRole("combobox"), "Har läst klart");
+    await user.click(screen.getByRole("button", { name: /4 stjärnor/i }));
+    await user.type(
+      screen.getByPlaceholderText(/skriv ett kort omdöme/i),
+      "Magisk!"
+    );
+    await user.click(screen.getByRole("button", { name: /^spara$/i }));
+
+    expect(updateBook).toHaveBeenCalledWith(1, {
+      title: "Harry Potter",
+      author: "J.K. Rowling",
+      status: "Har läst klart",
+      rating: 4,
+      review: "Magisk!",
+    });
+  });
+
+  it("displays rating and review on the card", () => {
+    renderBookCard({
+      ...sampleBook,
+      status: "Har läst klart",
+      rating: 5,
+      review: "Bästa boken någonsin",
+    });
+
+    expect(screen.getByLabelText(/5 av 5 stjärnor/i)).toBeInTheDocument();
+    expect(screen.getByText("Bästa boken någonsin")).toBeInTheDocument();
   });
 
   it("requires confirmation before delete", async () => {

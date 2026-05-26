@@ -202,6 +202,54 @@ describe("BookStack API", () => {
 
       expect(response.status).toBe(404);
     });
+
+    it("returns 200 when updating rating and review", async () => {
+      const updated = {
+        ...sampleBook,
+        status: "Har läst klart",
+        rating: 5,
+        review: "En favorit!",
+      };
+      mockQuery.mockResolvedValueOnce({ rows: [updated] });
+
+      const response = await request(app)
+        .put("/api/books/1")
+        .set(createAuthHeader())
+        .send({
+          rating: 5,
+          review: "En favorit!",
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.rating).toBe(5);
+      expect(response.body.review).toBe("En favorit!");
+    });
+
+    it("returns 400 for invalid rating", async () => {
+      const response = await request(app)
+        .put("/api/books/1")
+        .set(createAuthHeader())
+        .send({ rating: 6 });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe(
+        "Betyg måste vara ett heltal mellan 1 och 5."
+      );
+      expect(mockQuery).not.toHaveBeenCalled();
+    });
+
+    it("returns 200 when clearing rating", async () => {
+      const updated = { ...sampleBook, rating: null, review: null };
+      mockQuery.mockResolvedValueOnce({ rows: [updated] });
+
+      const response = await request(app)
+        .put("/api/books/1")
+        .set(createAuthHeader())
+        .send({ rating: null, review: null });
+
+      expect(response.status).toBe(200);
+      expect(response.body.rating).toBeNull();
+    });
   });
 
   describe("DELETE /api/books/:id", () => {
