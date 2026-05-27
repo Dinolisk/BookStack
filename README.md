@@ -9,7 +9,7 @@ Detta projekt fungerar som ett bevis på förmågan att leverera robust mjukvara
 | | |
 |---|---|
 | **Live App** | [https://bookstak.netlify.app/](https://bookstak.netlify.app/) |
-| **Backend API** | [bookstack-production-0a11.up.railway.app](bookstack-production-0a11.up.railway.app) |
+| **Backend API** | [bookstack-production-0a11.up.railway.app](https://bookstack-production-0a11.up.railway.app/) |
 | **QA Testrapport** | Se sektionen [Kvalitetssäkring & QA](#-kvalitetssäkring--qa) längre ner |
 | **Repository** | [github.com/Dinolisk/BookStack](https://github.com/Dinolisk/BookStack) |
 
