@@ -13,7 +13,7 @@ Detta projekt fungerar som ett bevis på förmågan att leverera robust mjukvara
 | **QA Testrapport** | Se sektionen [Kvalitetssäkring & QA](#-kvalitetssäkring--qa) längre ner |
 | **Repository** | [github.com/Dinolisk/BookStack](https://github.com/Dinolisk/BookStack) |
 
-> **💡 Recruiter Hint:** Du behöver inte registrera ett konto. Klicka på **"Prova demo (demo@bookstack.com)"** på inloggningssidan för att logga in direkt och testa hela bokhyllan.
+> **💡Hint:** Du behöver inte registrera ett konto. Klicka på **"Prova demo (demo@bookstack.com)"** på inloggningssidan för att logga in direkt och testa hela bokhyllan.
 
 ---
 
